@@ -1,17 +1,11 @@
 const axios = require('axios');
-const { setToken, getToken } = require('./tokenStore')
+const { setToken, getRefreshToken, getAccessToken, getTokenExpiration, getTokenUsername} = require('./tokenStore')
 
 // Retrieves User Data for Uncached User
 async function validateUser(code) {
 
     // Form to Retrieve Token
-    const formData = new URLSearchParams({
-        client_id: process.env.client_id,
-        client_secret: process.env.client_secret,
-        grant_type: 'authorization_code',
-        code: code.toString(),
-        redirect_uri: 'http://localhost:1500/api/auth/discord/redirect',
-    });
+    const formData = buildFormData('authorization_code', code.toString())
 
     // Retrieve Token From Discord API
     const output = await axios.post('https://discord.com/api/v10/oauth2/token',
@@ -20,29 +14,25 @@ async function validateUser(code) {
                 "Content-Type": 'application/x-www-form-urlencoded',
             }
     });
-    
+
     // If Successfully Retrieved Token
     if (output.data) {
         const userinfo = await retrieveUser(output.data.access_token)
         saveUserInfo(userinfo, output)
         return userinfo.data.id
     }
-    
+
+    return null
 }
 
 // Refresh Token For Cached Player
-async function refreshUser(username) {
+async function refreshUser(userID) {
+    const refreshToken = getRefreshToken(userID)
+    if (!refreshToken) {
+        throw new Error('Missing refresh token')
+    }
 
-    const data = getToken(username)
-    // Refresh Token
-    const formDataRefresh = new URLSearchParams({
-    client_id: process.env.client_id,
-    client_secret: process.env.client_secret,
-    grant_type: 'refresh_token',
-    refresh_token: output.data.refresh_token,
-    });
-
-    // Retrieve ref
+    const formDataRefresh = buildFormData('refresh_token', refreshToken);
     const refresh = await axios.post('https://discord.com/api/v10/oauth2/token',
         formDataRefresh, {
             headers: {
@@ -59,7 +49,13 @@ async function refreshUser(username) {
 
 // Determines if Token of Cached Player is Expired
 function isTokenExpired(userID) {
-    return Date.now() > getToken(userID)["expires"]
+    const expires = getTokenExpiration(userID)
+    if (!expires) {
+        return true
+    }
+
+    // expires is stored as epoch seconds
+    return Math.floor(Date.now() / 1000) > expires
 }
 
 async function retrieveUser(token) {
@@ -85,7 +81,7 @@ function saveUserInfo(userinfo, output) {
 
 // Retrieve Username From UserID
 function getUserNameFromUserID(userID) {
-    return getToken(userID)["username"]
+    return getTokenUsername(userID)
 }
 
 // Check if Token is Timed Out then Refresh If So
@@ -95,4 +91,37 @@ async function checkToken(userID) {
     }
 }
 
-module.exports = {validateUser, refreshUser, retrieveUser, isTokenExpired, saveUserInfo, getUserNameFromUserID, checkToken}
+async function getUserActivity(userID) {
+    await checkToken(userID)
+    const headers =  {
+        'Authorization': `Bearer ${getAccessToken(userID)}`,
+    }
+
+    // user info
+    const connections = await axios.get('https://discord.com/api/v10/users/@me/connections', {
+        headers
+    });
+
+    console.log(connections)
+
+}
+
+function buildFormData(grant_type, grant) {
+    const formData = new URLSearchParams({
+        client_id: process.env.client_id,
+        client_secret: process.env.client_secret,
+        grant_type: grant_type,
+    })
+    switch (grant_type) {
+        case "refresh_token":
+            formData.append('refresh_token', grant)
+            break
+        case "authorization_code":
+            formData.append('code', grant.toString())
+            formData.append('redirect_uri', 'http://localhost:1500/api/auth/discord/redirect')
+    }
+
+    return formData
+}
+
+module.exports = {validateUser, refreshUser, retrieveUser, isTokenExpired, saveUserInfo, getUserNameFromUserID, checkToken, buildFormData, getUserActivity}

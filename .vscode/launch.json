@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run devStart",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run devStart",
+      "serverReadyAction": {
+        "pattern": "Running on (\\d+)",
+        "uriFormat": "http://localhost:%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}

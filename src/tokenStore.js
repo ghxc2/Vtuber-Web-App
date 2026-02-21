@@ -36,8 +36,28 @@ function getToken(userID) {
 // Update User's Token
 function setToken(userID, token, refreshToken, expires, username) {
     const tokens = loadTokens();
-    tokens[userID] = {token: token, refresh_token: refreshToken, expires: expires, username: username}
+    tokens[userID] = { token: token, refresh_token: refreshToken, expires: expires, username: username }
     saveTokens(tokens)
 }
 
-module.exports = {setToken, getToken}
+// Get Access Token
+function getAccessToken(userID) {
+    return getToken(userID)?.token ?? null
+}
+
+// Get Refresh Token
+function getRefreshToken(userID) {
+    return getToken(userID)?.refresh_token ?? null
+}
+
+// Get Token Expires
+function getTokenExpiration(userID) {
+    return getToken(userID)?.expires ?? null
+}
+
+// Get Token Username
+function getTokenUsername(userID) {
+    return getToken(userID)?.username ?? null
+}
+
+module.exports = { setToken, getToken, getAccessToken, getRefreshToken, getTokenExpiration, getTokenUsername }
