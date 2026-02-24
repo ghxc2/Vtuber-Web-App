@@ -108,8 +108,8 @@ async function getUserActivity(userID) {
 
 function buildFormData(grant_type, grant) {
     const formData = new URLSearchParams({
-        client_id: process.env.client_id,
-        client_secret: process.env.client_secret,
+        client_id: process.env.WEB_CLIENT_ID,
+        client_secret: process.env.WEB_CLIENT_SECRET,
         grant_type: grant_type,
     })
     switch (grant_type) {

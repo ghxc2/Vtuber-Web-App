@@ -5,8 +5,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 // Current Project Imports
-const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken, getUserActivity } = require('./users')
-const { getCookieUsername, buildCookieUserID } = require('./main/cookies')
+const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken, getUserActivity } = require('../users')
+const { getCookieUsername, buildCookieUserID } = require('./cookies')
 
 // App Variables
 const port = process.env.PORT || 1500;
