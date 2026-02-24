@@ -2,14 +2,20 @@
 require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const path = require('path');
 
 // Current Project Imports
-const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken } = require('./users')
+const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken, getUserActivity } = require('./users')
 const { getCookieUsername, buildCookieUserID } = require('./cookies')
 
 // App Variables
 const port = process.env.port || 1500;
 const app = express();
+
+// Setup View Engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '../views'));
+app.use(express.urlencoded({ extended: true }));
 
 // Allows App to use Cookies
 app.use(cookieParser())
@@ -75,9 +81,14 @@ app.get('/voice', async (req, res) => {
         redirectError(res)
         return
     }
-
-    res.send(`Hello, ${getUserNameFromUserID(userID)}`)
+    username = getUserNameFromUserID(userID)
+    res.render('voice', { username })
 })
+
+app.post('/voice/submit', (req, res) => {
+  const channel = req.body.channel; // user-entered string
+  res.send(`You entered: ${channel}`);
+});
 
 // Failed Login
 app.get('/error', async (req, res) => {
