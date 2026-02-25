@@ -12,7 +12,8 @@ const {
 	MessageFlags,
 	REST,
 	Routes,
-} = require("discord.js")
+} = require("discord.js");
+const { resolve } = require('dns');
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -34,7 +35,7 @@ for (const file of commandFiles) {
 	if ('data' in command && 'execute' in command) {
 		client.commands.set(command.data.name, command);
 	} else {
-		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+		consoleLogger(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
 	}
 }
 
@@ -82,17 +83,17 @@ async function registerCommands() {
 
 	// PUT Commands
 	await rest.put(Routes.applicationCommands(appId), { body: commands });
-	console.log(`Registered ${commands.length} global command(s).`);
+	consoleLogger(`Registered ${commands.length} global command(s).`);
 }
 
 // Voice Listener
 client.on('voiceActivity', (evt) => {
-    console.log(`[voice] ${evt.userID} ${evt.type} in ${evt.channelId}`);
+    consoleLogger(`[voice] ${evt.userID} ${evt.type} in ${evt.channelId}`);
 });
 
 // Ready Printer
 client.once(Events.ClientReady, async (c) => {
-	console.log(`${c.user.username} Is Ready`)
+	consoleLogger(`${c.user.username} Is Ready`)
 	try {
 		await registerCommands();
 	} catch (error) {
@@ -102,7 +103,7 @@ client.once(Events.ClientReady, async (c) => {
 
 // Exit Logic
 async function shutdown(signal) {
-  console.log(`Received ${signal}, shutting down...`);
+  consoleLogger(`Received ${signal}, shutting down...`);
 
   try {
     // Close voice connections
@@ -123,6 +124,21 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 // container/system stop 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
+// Start Bot Function
+// Returns Active Bot Client
+async function startBot() {
+	// Start Bot
+	client.login(process.env.TOKEN)
 
+	// Wait until Bot is Ready
+	await new Promise((resolve) => client.once(Events.ClientReady, resolve))
 
-client.login(process.env.TOKEN)
+	// Return Client
+	return client
+}
+
+function consoleLogger(message) {
+	console.info(`[Bot] ${message}`)
+}
+
+module.exports = { startBot }

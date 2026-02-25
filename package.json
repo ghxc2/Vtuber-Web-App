@@ -16,7 +16,8 @@
   "main": "src/index.js",
   "scripts": {
     "devStart": "nodemon src/main/index.js",
-    "bot": "nodemon src/bot/bot.js"
+    "bot": "nodemon src/bot/bot.js",
+    "appStart": "nodemon src/index.js"
   },
   "nodemonConfig": {
     "ignore": [
