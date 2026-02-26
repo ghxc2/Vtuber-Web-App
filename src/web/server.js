@@ -5,8 +5,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 // Current Project Imports
-const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken, getUserActivity } = require('./users')
-const { getCookieUsername, buildCookieUserID } = require('./cookies')
+const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken } = require('./users');
+const { getCookieUsername, buildCookieUserID } = require('./cookies');
 
 function setupWeb({ app }) {
     // Setup View Engine
@@ -79,7 +79,10 @@ function setupWeb({ app }) {
             return
         }
         username = getUserNameFromUserID(userID)
-        res.render('voice', { username })
+        res.render('voice', { 
+            username,
+            users: Object.values(app.locals.users),
+         })
     })
 
     app.post('/voice/submit', (req, res) => {
@@ -87,15 +90,92 @@ function setupWeb({ app }) {
     res.send(`You entered: ${channel}`);
     });
 
-    // Failed Login
+    // Error Page
     app.get('/error', async (req, res) => {
         res.send(`Please Login Using this <a href='https://discord.com/oauth2/authorize?client_id=${process.env.WEB_CLIENT_ID}&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A1500%2Fapi%2Fauth%2Fdiscord%2Fredirect&scope=identify+guilds+connections+email+guilds.join+gdm.join'>link</a>`)
     })
+    
+    // Static Files
+    app.use('/static', express.static(path.join(__dirname, 'public')));
+
 }
 
 // Easy Function to Redirect to Error Page
 function redirectError(res) {
     res.redirect("/error")
+}
+
+// Subscribe To Voice Listener Event using a passed function
+function voiceListener({ client, handler }) {
+    client.on('voiceActivity', (evt) => handler(evt))
+}
+
+// /voice Page Event Logic
+function setupVoiceEvent({ app, client }) {
+    // Create Set for VoiceStreams
+    app.locals.voiceStreams = new Set()
+
+    // /voice/events setup
+    app.get('/voice/events', (req, res) => {
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        res.flushHeaders?.()
+
+        // Add The Current Session to Voice Stream
+        app.locals.voiceStreams.add(res);
+
+        // Remove Session when Closed
+        req.on('close', () => app.locals.voiceStreams.delete(res));
+    })
+    const handler = (evt) => {
+        const u = ensureUser({ evt, app });
+        switch (evt.type) {
+            case 'start':
+                u.speaking = true;
+                break;
+            case 'end':
+                u.speaking = false;
+                break;
+            case 'mute':
+                u.mute = true;
+                break;
+            case 'unmute':
+                u.mute = false;
+                break;
+            case 'deaf':
+                u.deaf = true;
+                break;
+            case 'undeaf':
+                u.deaf = false;
+                break;
+            default:
+                // Here just incase
+                break;
+        }
+
+        app.locals.users[u.userId] = u
+        consoleLogger(u.userId)
+        const users = app.locals.users
+        const payload = `data: ${JSON.stringify({ type: 'state', users: users })}\n\n`;
+        for (const stream of app.locals.voiceStreams) stream.write(payload);
+    }
+
+    voiceListener({ client, handler })
+}
+
+function ensureUser({ app, evt }) {
+    const users = app.locals.users;
+    if (!users[evt.userId]) {
+        users[evt.userId] = {
+            userId: evt.userId,
+            username: evt.username,
+            speaking: false,
+            mute: false,
+            deaf: false,
+        }
+    }
+    return users[evt.userId]
 }
 
 // App Start Logic
@@ -105,11 +185,14 @@ function startWeb({ client }) {
     const port = process.env.PORT || 1500;
     const app = express();
     app.locals.botClient = client
+    app.locals.users = {}
     setupWeb({ app })
+    setupVoiceEvent({ app, client })
 
     app.listen(port, () => { consoleLogger(`Running on ${port}`) })
 }
 
+// Log To Console Marked as Web
 function consoleLogger(message) {
 	console.info(`[Web] ${message}`)
 }

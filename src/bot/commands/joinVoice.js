@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js')
+const { SlashCommandBuilder, Events, NewsChannel } = require('discord.js')
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 
 // Module To Run
@@ -40,24 +40,58 @@ module.exports = {
         })
 
         // Voice Event Logic
-        connection.receiver.speaking.on('start', (userID) => {
-        client.emit('voiceActivity', {
-            type: 'start',
-            guildId: interaction.guildId,
-            channelId: interaction.member.voice.channelId,
-            userID,
-            at: Date.now(),
-        });
-        });
 
+        // On Green Circle Start
+        connection.receiver.speaking.on('start', (userId) => {
+            client.emit('voiceActivity', {
+                type: 'start',
+                guildId: interaction.guildId,
+                channelId: interaction.member.voice.channelId,
+                userId,
+                at: Date.now(),
+            });
+        });
+        
+        // On Green Circle Ending
         connection.receiver.speaking.on('end', (userId) => {
-        client.emit('voiceActivity', {
-            type: 'end',
-            guildId: interaction.guildId,
-            channelId: interaction.member.voice.channelId,
-            userID,
-            at: Date.now(),
+            client.emit('voiceActivity', {
+                type: 'end',
+                guildId: interaction.guildId,
+                channelId: interaction.member.voice.channelId,
+                userId,
+                at: Date.now(),
+            });
         });
-        });
+        
+        // Mute and Deafened Events
+        client.on(Events.VoiceStateUpdate, (oldState, newState) => {
+            const userId = newState.id
+            const guildId = newState.guildId
+            const channelId = newState.channelId
+
+            const newMuted = newState.serverMute || newState.selfMute
+            const oldMuted = oldState.serverMute || oldState.selfMute
+            if (oldMuted !== newMuted) {
+                client.emit('voiceActivity', {
+                    type: newMuted ? 'mute' : 'unmute',
+                    guildId,
+                    channelId,
+                    userId,
+                    at: Date.now(),
+                });
+            }
+
+            const newDeafened = newState.serverDeaf || newState.selfDeaf
+            const oldDeafened = oldState.serverDeaf || oldState.selfDeaf
+            if (oldDeafened !== newDeafened) {
+                client.emit('voiceActivity', {
+                    type: newDeafened ? 'deaf' : 'undeaf',
+                    guildId,
+                    channelId,
+                    userId,
+                    at: Date.now(),
+                });
+            }
+        })
     }
 }

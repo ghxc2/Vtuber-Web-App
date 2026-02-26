@@ -86,11 +86,6 @@ async function registerCommands() {
 	consoleLogger(`Registered ${commands.length} global command(s).`);
 }
 
-// Voice Listener
-client.on('voiceActivity', (evt) => {
-    consoleLogger(`[voice] ${evt.userID} ${evt.type} in ${evt.channelId}`);
-});
-
 // Ready Printer
 client.once(Events.ClientReady, async (c) => {
 	consoleLogger(`${c.user.username} Is Ready`)
@@ -137,6 +132,7 @@ async function startBot() {
 	return client
 }
 
+// Log To Console Marked as Bot
 function consoleLogger(message) {
 	console.info(`[Bot] ${message}`)
 }

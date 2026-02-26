@@ -1,0 +1,33 @@
+<h1>Hello, <%= username %>, Welcome to /voice</h1>
+
+<h2>Voice Activity</h2>
+<div id="voiceStatus">Waiting for events...</div>
+
+<table id="voiceTable">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Speaking</th>
+            <th>Mute</th>
+            <th>Deaf</th>
+        </tr>
+    </thead>
+    <tbody id="voiceTableBody">
+        <% if (users && users.length) { %>
+            <% users.forEach((u) => { %>
+                <tr>
+                    <td><%= u.username %></td>
+                    <td><%= u.speaking %></td>
+                    <td><%= u.mute %></td>
+                    <td><%= u.deaf %></td>
+                </tr>
+            <% }) %>
+        <% } else { %>
+            <tr>
+                <td colspan="4">No Users in Channel</td>
+            </tr>
+        <% } %>
+    </tbody>
+
+</table>
+<script src="/static/js/voice.js"></script>
