@@ -1,5 +1,21 @@
 const axios = require('axios');
-const { setToken, getRefreshToken, getAccessToken, getTokenExpiration, getTokenUsername} = require('./tokenStore')
+const { saveUser, getUserById } = require('./database/userDatabase')
+
+function getRefreshToken(userID) {
+    return getUserById(userID)?.refresh_token ?? null
+}
+
+function getAccessToken(userID) {
+    return getUserById(userID)?.access_token ?? null
+}
+
+function getTokenExpiration(userID) {
+    return getUserById(userID)?.expires_at ?? null
+}
+
+function getTokenUsername(userID) {
+    return getUserById(userID)?.username ?? null
+}
 
 // Retrieves User Data for Uncached User
 async function validateUser(code) {
@@ -75,7 +91,13 @@ async function retrieveUser(token) {
 function saveUserInfo(userinfo, output) {
     // Logic To Save Token to Memory
     const expires = Math.floor(Date.now() / 1000) + output.data.expires_in
-    setToken(userinfo.data.id, output.data.access_token, output.data.refresh_token, expires, userinfo.data.username)
+    saveUser({
+        userId: userinfo.data.id,
+        accessToken: output.data.access_token,
+        refreshToken: output.data.refresh_token,
+        expiresAt: expires,
+        username: userinfo.data.username,
+    })
 }
 
 

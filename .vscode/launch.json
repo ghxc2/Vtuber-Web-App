@@ -5,7 +5,7 @@
       "name": "Run devStart",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run devStart",
+      "command": "npm run appStart",
       "serverReadyAction": {
         "pattern": "Running on (\\d+)",
         "uriFormat": "http://localhost:%s",

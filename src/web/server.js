@@ -7,6 +7,7 @@ const path = require('path');
 // Current Project Imports
 const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID, checkToken } = require('./users');
 const { getCookieUsername, buildCookieUserID } = require('./cookies');
+const { getConfigsForOwner, saveConfig } = require('./database/userConfigDatabase')
 
 function setupWeb({ app }) {
     // Setup View Engine
@@ -64,25 +65,17 @@ function setupWeb({ app }) {
 
     // Voice Related
     app.get('/voice', async (req, res) => {
-        const userID = req.cookies?.userID;
-        if (!userID) {
-            redirectError(res)
-            return
-        }
-
         try {
-            // Assure User Token Valid
-            await checkToken(userID)
-        } catch (e) {
-            console.error("Voice token check failed:", e.message)
-            redirectError(res)
-            return
+            const userID = await validateCookie(req)
+            username = getUserNameFromUserID(userID)
+            res.render('voice', { 
+                username,
+                users: Object.values(app.locals.users),
+            })
+        } catch (err) {
+            return;
         }
-        username = getUserNameFromUserID(userID)
-        res.render('voice', { 
-            username,
-            users: Object.values(app.locals.users),
-         })
+        
     })
 
     app.post('/voice/submit', (req, res) => {
@@ -97,7 +90,19 @@ function setupWeb({ app }) {
     
     // Static Files
     app.use('/static', express.static(path.join(__dirname, 'public')));
-
+    
+    app.use('/settings', async (req, res) => {
+        try {
+            const userID = await validateCookie(req)
+            username = getUserNameFromUserID(userID)
+            res.render('settings', { 
+                username,
+                users: Object.values(app.locals.users),
+            })
+        } catch (err) {
+            return;
+        }
+    })
 }
 
 // Easy Function to Redirect to Error Page
@@ -130,6 +135,8 @@ function setupVoiceEvent({ app, client }) {
     })
     const handler = (evt) => {
         const u = ensureUser({ evt, app });
+
+        // Event Type Handling
         switch (evt.type) {
             case 'start':
                 u.speaking = true;
@@ -154,8 +161,10 @@ function setupVoiceEvent({ app, client }) {
                 break;
         }
 
+        // Update Locals with user
         app.locals.users[u.userId] = u
-        consoleLogger(u.userId)
+
+        // Send User Info to Browser
         const users = app.locals.users
         const payload = `data: ${JSON.stringify({ type: 'state', users: users })}\n\n`;
         for (const stream of app.locals.voiceStreams) stream.write(payload);
@@ -192,6 +201,25 @@ function startWeb({ client }) {
     app.listen(port, () => { consoleLogger(`Running on ${port}`) })
 }
 
+// Validate Cookie
+async function validateCookie(req) {
+    const userID = req.cookies?.userID;
+    if (!userID) {
+        redirectError(res)
+        throw new Error("Invalid ID")
+    }
+
+    try {
+        // Assure User Token Valid
+        await checkToken(userID)
+    } catch (e) {
+        console.error("Token check failed:", e.message)
+        redirectError(res)
+        throw new Error("Invalid ID")
+    }
+
+    return userID
+}
 // Log To Console Marked as Web
 function consoleLogger(message) {
 	console.info(`[Web] ${message}`)
