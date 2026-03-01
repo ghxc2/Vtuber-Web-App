@@ -1,0 +1,84 @@
+<h1>Hello, <%= username %>, Welcome to /avatars</h1>
+<h2>Upload Avatar</h2>
+
+<form
+  method="post"
+  action="/avatars/<%= ownerUserId %>/PLACEHOLDER/avatar"
+  enctype="multipart/form-data"
+  onsubmit="this.action = `/avatars/<%= ownerUserId %>/${encodeURIComponent(this.assetId.value)}/${encodeURIComponent(this.assetType.value)}`;"
+>
+  <label for="assetId">Asset ID</label>
+  <input
+    id="assetId"
+    name="assetId"
+    type="text"
+    placeholder="e.g. avatar1"
+    required
+  />
+
+  <label for="assetType">Asset Type</label>
+  <select id="assetType" name="assetType" required>
+    <option value="avatar" selected>avatar</option>
+    <option value="speaking">speaking</option>
+    <option value="muted">muted</option>
+    <option value="deafened">deafened</option>
+  </select>
+
+  <label for="avatars">Image File</label>
+  <input
+    id="avatars"
+    name="avatars"
+    type="file"
+    accept="image/png,image/jpeg,image/gif"
+    required
+  />
+
+  <button type="submit">Upload</button>
+</form>
+<h2>Uploaded Avatars</h2>
+<% if (avatars && avatars.length) { %>
+  <table>
+    <thead>
+      <tr>
+        <th>Asset ID</th>
+        <th>Avatar</th>
+        <th>Speaking</th>
+        <th>Muted</th>
+        <th>Deafened</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% avatars.forEach((asset) => { %>
+        <% const itemByType = Object.fromEntries((asset.items || []).map((item) => [item.assetType, item])); %>
+        <% const types = ['avatar', 'speaking', 'muted', 'deafened']; %>
+        <tr>
+          <td><%= asset.assetId %></td>
+          <% types.forEach((type) => { %>
+            <% const item = itemByType[type]; %>
+            <td>
+              <% if (item) { %>
+                <img
+                  src="<%= `/uploads/${ownerUserId}/${asset.assetId}/${item.fileName}` %>"
+                  alt="<%= `${asset.assetId}-${type}` %>"
+                  width="64"
+                  height="64"
+                  style="object-fit: cover; border-radius: 6px;"
+                />
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+          <% }) %>
+          <td>
+            <form method="post" action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/delete" style="display:inline;">
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } else { %>
+  <p>No uploaded avatars found.</p>
+<% } %>

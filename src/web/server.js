@@ -8,6 +8,7 @@ const path = require('path');
 const { validateUser, refreshUser, isTokenExpired, getUserNameFromUserID } = require('./users');
 const { getCookieUsername, buildCookieUserID, validateCookie } = require('./cookies');
 const { getConfigsForOwner, saveConfig } = require('./database/userConfigDatabase')
+const { handleUpload, getAllAvatarsForUser, deleteAvatarDirectory } = require('./avatars')
 
 function setupWeb({ app }) {
     // Setup View Engine
@@ -90,7 +91,9 @@ function setupWeb({ app }) {
     
     // Static Files
     app.use('/static', express.static(path.join(__dirname, 'public')));
+    app.use('/uploads', express.static(path.join(__dirname, 'user-data', 'uploads')));
     
+    // Settings Page
     app.get('/settings', async (req, res) => {
         try {
             const ownerUserId = await validateCookie(req, res)
@@ -116,6 +119,7 @@ function setupWeb({ app }) {
         }
     })
 
+    // Settings Upload
     app.post('/settings/config/:targetUserId', async (req, res) => {
         try {
             const ownerUserId = await validateCookie(req, res)
@@ -138,6 +142,52 @@ function setupWeb({ app }) {
             return;
         }
     })
+
+    // Avatars
+    app.get('/avatars', async (req, res) => {
+        try {
+            const ownerUserId = await validateCookie(req, res)
+            const username = getUserNameFromUserID(ownerUserId)
+            const avatars = getAllAvatarsForUser(ownerUserId)
+
+            res.render('avatars', {
+                username,
+                avatars,
+                ownerUserId
+            })
+        } catch (err) {
+            return;
+        }
+    })
+
+    // Delete Avatar
+    app.post('/avatars/:userId/:assetId/delete', async (req, res) => {
+        try {
+            const ownerUserId = await validateCookie(req, res)
+            if (ownerUserId !== req.params.userId) {
+                return res.status(403).send('Forbidden');
+            }
+            const { userId, assetId } = req.params
+            deleteAvatarDirectory(userId, assetId)
+            return res.redirect('/avatars')
+        } catch (err) {
+            return res.status(500).send('Internal Server Error');
+        }
+    })
+
+    // Avatars Upload
+    app.post('/avatars/:userId/:assetId/:assetType', async (req, res) => {
+        try {
+            const ownerUserId = await validateCookie(req, res)
+            if (ownerUserId !== req.params.userId) {
+                return res.status(403).send('Forbidden');
+            }
+
+            return handleUpload(req, res);
+        } catch (err) {
+            return;
+        }
+    });
 }
 
 // Easy Function to Redirect to Error Page

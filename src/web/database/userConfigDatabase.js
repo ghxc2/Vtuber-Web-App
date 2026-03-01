@@ -15,6 +15,13 @@ const upsertConfig = db.prepare(`
         avatar_path=excluded.avatar_path
 `);
 
+const upsertAvatar = db.prepare(`
+    INSERT INTO user_target_configs (owner_user_id, target_user_id, avatar_path)
+    VALUES (@owner_user_id, @target_user_id, @avatar_path)
+    ON CONFLICT(owner_user_id, target_user_id) DO UPDATE SET
+        avatar_path = excluded.avatar_path;
+`)
+
 // Exports
 module.exports = {
     // Gets user's settings
@@ -31,4 +38,13 @@ module.exports = {
             avatar_path: avatarPath ?? null,
         });
     },
+
+    // Saves avatar path to table
+    saveAvatarPath({ ownerUserId, targetUserId, avatarPath }) {
+        upsertAvatar.run({
+            owner_user_id: ownerUserId,
+            target_user_id: targetUserId,
+            avatar_path: avatarPath ?? null,
+        });
+    }
 };

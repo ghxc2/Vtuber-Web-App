@@ -49,7 +49,14 @@
             <%= (displayUser && displayUser.username) || c.target_user_id %>
           </td>
           <td><%= c.nickname || '-' %></td>
-          <td><%= c.avatar_path || '-' %></td>
+          <td>
+            <% const avatarSrc = c.avatar_path || (displayUser && displayUser.avatarUrl) || null; %>
+            <% if (avatarSrc) { %>
+              <img src="<%= avatarSrc %>" alt="<%= (displayUser && displayUser.username) || c.target_user_id %> avatar" width="24" height="24" style="vertical-align: middle; border-radius: 50%;" />
+            <% } else { %>
+              -
+            <% } %>
+          </td>
         </tr>
       <% }) %>
     </tbody>
