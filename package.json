@@ -21,7 +21,8 @@
   },
   "nodemonConfig": {
     "ignore": [
-      "src/web/user-data/**"
+      "src/web/user-data/**",
+      "src/web/public/**"
     ]
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "ejs": "^4.0.1",
     "express": "^5.2.1",
     "multer": "^2.1.0",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "sharp": "^0.34.5"
   }
 }

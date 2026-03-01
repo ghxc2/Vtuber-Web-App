@@ -1,13 +1,13 @@
 <h1>Hello, <%= username %>, Welcome to /avatars</h1>
-<h2>Upload Avatar</h2>
+<h2>Create Avatar Set</h2>
 
 <form
   method="post"
-  action="/avatars/<%= ownerUserId %>/PLACEHOLDER/avatar"
+  action="/avatars/<%= ownerUserId %>/PLACEHOLDER"
   enctype="multipart/form-data"
-  onsubmit="this.action = `/avatars/<%= ownerUserId %>/${encodeURIComponent(this.assetId.value)}/${encodeURIComponent(this.assetType.value)}`;"
+  onsubmit="this.action = `/avatars/<%= ownerUserId %>/${encodeURIComponent(this.assetId.value)}`;"
 >
-  <label for="assetId">Asset ID</label>
+  <label for="assetId">Set Name</label>
   <input
     id="assetId"
     name="assetId"
@@ -15,24 +15,6 @@
     placeholder="e.g. avatar1"
     required
   />
-
-  <label for="assetType">Asset Type</label>
-  <select id="assetType" name="assetType" required>
-    <option value="avatar" selected>avatar</option>
-    <option value="speaking">speaking</option>
-    <option value="muted">muted</option>
-    <option value="deafened">deafened</option>
-  </select>
-
-  <label for="avatars">Image File</label>
-  <input
-    id="avatars"
-    name="avatars"
-    type="file"
-    accept="image/png,image/jpeg,image/gif"
-    required
-  />
-
   <button type="submit">Upload</button>
 </form>
 <h2>Uploaded Avatars</h2>
@@ -40,7 +22,7 @@
   <table>
     <thead>
       <tr>
-        <th>Asset ID</th>
+        <th>Set</th>
         <th>Avatar</th>
         <th>Speaking</th>
         <th>Muted</th>
@@ -71,7 +53,15 @@
             </td>
           <% }) %>
           <td>
-            <form method="post" action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/delete" style="display:inline;">
+            <form method="get" action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/edit" style="display:inline;">
+              <button type="submit">Edit</button>
+            </form>
+            <form
+              method="post"
+              action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/delete"
+              style="display:inline;"
+              onsubmit="return confirm('Delete this avatar set and all its images?');"
+            >
               <button type="submit">Delete</button>
             </form>
           </td>

@@ -105,7 +105,15 @@ client.on(Events.VoiceStateUpdate, (oldState, newState) => {
 	const guildId = newState.guildId;
 	const channelId = newState.channelId;
 
-	const disconnected = !!oldState.channelId && oldState.channelId !== newState.channelId;
+	if (userId === client.user?.id) {
+		const botDisconnected = !!oldState.channelId && !newState.channelId;
+		if (botDisconnected) {
+			getVoiceConnection(guildId)?.destroy();
+		}
+		return;
+	}
+
+	const disconnected = !!oldState.channelId && !newState.channelId;
 
 	if (disconnected) {
 		removeUserFromVoicePresence(userId);
@@ -154,9 +162,25 @@ async function getVoiceUsers(id) {
 	const users = []
 	try {
 		// Guild Validation
-		const guildId = getUserVoiceGuild(id)
-		const channelId = getUserVoiceChannel(id)
-		const guild = client.guilds.cache.get(guildId)
+		let guildId = getUserVoiceGuild(id)
+		let channelId = getUserVoiceChannel(id)
+		let guild = client.guilds.cache.get(guildId)
+
+		// Recovery path: if presence was missed, locate the user from guild voice state.
+		if (!guildId || !channelId || !guild) {
+			for (const cachedGuild of client.guilds.cache.values()) {
+				const member = cachedGuild.members.cache.get(id) ?? await cachedGuild.members.fetch(id).catch(() => null)
+				const memberChannelId = member?.voice?.channelId
+				if (!memberChannelId) continue
+
+				guildId = cachedGuild.id
+				channelId = memberChannelId
+				guild = cachedGuild
+				addUserToVoicePresence(id, guildId, channelId)
+				break
+			}
+		}
+
 		if (!guild || !channelId) return users
 
 		// Get users from voicePresence inverse index instead of channel member iteration.
@@ -177,6 +201,49 @@ async function getVoiceUsers(id) {
 	return users
 
 	
+}
+
+async function getVoiceLocation(userId) {
+	let guildId = getUserVoiceGuild(userId)
+	let channelId = getUserVoiceChannel(userId)
+	if (guildId && channelId) {
+		return { guildId, channelId }
+	}
+
+	for (const cachedGuild of client.guilds.cache.values()) {
+		const member = cachedGuild.members.cache.get(userId) ?? await cachedGuild.members.fetch(userId).catch(() => null)
+		const memberChannelId = member?.voice?.channelId
+		if (!memberChannelId) continue
+		addUserToVoicePresence(userId, cachedGuild.id, memberChannelId)
+		guildId = cachedGuild.id
+		channelId = memberChannelId
+		break
+	}
+
+	if (!guildId || !channelId) return null
+	return { guildId, channelId }
+}
+
+async function isBotInSameVoiceChannel(userId) {
+	const userVoice = await getVoiceLocation(userId)
+	if (!userVoice) {
+		return {
+			userInVoice: false,
+			botInVoice: false,
+			inSameChannel: false,
+		}
+	}
+
+	const guild = client.guilds.cache.get(userVoice.guildId)
+	const botMember = guild
+		? (guild.members.cache.get(client.user.id) ?? await guild.members.fetch(client.user.id).catch(() => null))
+		: null
+	const botChannelId = botMember?.voice?.channelId ?? null
+	return {
+		userInVoice: true,
+		botInVoice: !!botChannelId,
+		inSameChannel: botChannelId === userVoice.channelId,
+	}
 }
 
 // Ready Printer
@@ -222,6 +289,7 @@ async function startBot() {
 	await new Promise((resolve) => client.once(Events.ClientReady, resolve))
 	initVoicePresence(client.user.id)
 	client.getVoiceUsers = getVoiceUsers
+	client.isBotInSameVoiceChannel = isBotInSameVoiceChannel
 	// Return Client
 	return client
 }
@@ -231,4 +299,4 @@ function consoleLogger(message) {
 	console.info(`[Bot] ${message}`)
 }
 
-module.exports = { startBot, getVoiceUsers }
+module.exports = { startBot, getVoiceUsers, isBotInSameVoiceChannel }

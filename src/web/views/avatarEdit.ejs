@@ -1,0 +1,91 @@
+<h1>Hello, <%= username %>, Edit Avatar Set</h1>
+<p>
+  <a href="/avatars">Back to Avatars</a>
+</p>
+
+<h2>
+  Asset ID: <strong><%= assetId %></strong>
+</h2>
+
+<% const itemByType = assetsByType || {}; %>
+<% const types = ['avatar', 'speaking', 'muted', 'deafened']; %>
+
+<h2>Edit Files</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <% types.forEach((type) => { %>
+          <th><%= type %></th>
+        <% }) %>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Preview</th>
+        <% types.forEach((type) => { %>
+          <% const item = itemByType[type]; %>
+          <td>
+            <% if (item) { %>
+              <img
+                src="<%= `/uploads/${ownerUserId}/${assetId}/${item.fileName}` %>"
+                alt="<%= `${assetId}-${type}` %>"
+                width="80"
+                height="80"
+                style="object-fit: cover; border-radius: 6px;"
+              />
+            <% } else { %>
+              -
+            <% } %>
+          </td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>File</th>
+        <% types.forEach((type) => { %>
+          <% const item = itemByType[type]; %>
+          <td><%= item ? item.fileName : '-' %></td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>Replace</th>
+        <% types.forEach((type) => { %>
+          <td>
+            <form
+              method="post"
+              action="/avatars/<%= ownerUserId %>/<%= assetId %>/<%= type %>"
+              enctype="multipart/form-data"
+              style="display:inline;"
+            >
+              <input
+                id="<%= type %>File"
+                name="avatars"
+                type="file"
+                accept="image/png,image/jpeg,image/gif"
+                onchange="this.form.submit()"
+              />
+            </form>
+          </td>
+        <% }) %>
+      </tr>
+      <tr>
+        <th>Delete</th>
+        <% types.forEach((type) => { %>
+          <% const item = itemByType[type]; %>
+          <td>
+            <form
+              method="post"
+              action="/avatars/<%= ownerUserId %>/<%= assetId %>/<%= type %>/delete"
+              style="display:inline;"
+              onsubmit="return confirm('Delete this image type from the set?');"
+            >
+              <button type="submit" <%= item ? '' : 'disabled' %>>
+                Delete
+              </button>
+            </form>
+          </td>
+        <% }) %>
+      </tr>
+    </tbody>
+  </table>

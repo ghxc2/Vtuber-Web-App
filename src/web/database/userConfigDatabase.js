@@ -22,6 +22,13 @@ const upsertAvatar = db.prepare(`
         avatar_path = excluded.avatar_path;
 `)
 
+const getAvatarPathStmt = db.prepare(`
+  SELECT avatar_path
+  FROM user_target_configs
+  WHERE owner_user_id = ? AND target_user_id = ?
+  LIMIT 1
+`);
+
 // Exports
 module.exports = {
     // Gets user's settings
@@ -46,5 +53,11 @@ module.exports = {
             target_user_id: targetUserId,
             avatar_path: avatarPath ?? null,
         });
-    }
+    },
+
+    // Returns avatar path for specific target user and owner
+    getAvatarPath(ownerUserId, targetUserId) {
+        const row = getAvatarPathStmt.get(ownerUserId, targetUserId);
+        return row ? row.avatar_path : null;
+    },
 };

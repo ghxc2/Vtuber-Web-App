@@ -1,4 +1,13 @@
 <h1>Hello, <%= username %>, Welcome to /voice</h1>
+<p>
+  <a href="/settings">Voice Settings</a>
+</p>
+<p
+  id="voiceWarning"
+  class="voice-warning <%= (voiceStatus && voiceStatus.userInVoice && !voiceStatus.inSameChannel) ? '' : 'is-hidden' %>"
+>
+  Warning: the bot is not currently in your voice channel.
+</p>
 
 <h2>Voice Activity</h2>
 <div id="voiceStatus">Waiting for events...</div>
@@ -7,6 +16,10 @@
     <thead>
         <tr>
             <th>User</th>
+            <th>Avatar</th>
+            <th>Speaking Avatar</th>
+            <th>Muted Avatar</th>
+            <th>Deafened Avatar</th>
             <th>Speaking</th>
             <th>Mute</th>
             <th>Deaf</th>
@@ -17,6 +30,17 @@
             <% users.forEach((u) => { %>
                 <tr>
                     <td><%= u.username %></td>
+                    <% const setTypes = ['avatar', 'speaking', 'muted', 'deafened']; %>
+                    <% setTypes.forEach((type) => { %>
+                        <% const src = (u.avatarSet && u.avatarSet[type]) || (type === 'avatar' ? u.avatarUrl : null); %>
+                        <td>
+                            <% if (src) { %>
+                                <img src="<%= src %>" alt="<%= `${u.username}-${type}` %>" width="128" height="128" style="object-fit: cover; border-radius: 8px;" />
+                            <% } else { %>
+                                -
+                            <% } %>
+                        </td>
+                    <% }) %>
                     <td><%= u.speaking %></td>
                     <td><%= u.mute %></td>
                     <td><%= u.deaf %></td>
@@ -24,10 +48,26 @@
             <% }) %>
         <% } else { %>
             <tr>
-                <td colspan="4">No Users in Channel</td>
+                <td colspan="8">No Users in Channel</td>
             </tr>
         <% } %>
     </tbody>
 
 </table>
+<style>
+  .voice-warning {
+    padding: 8px;
+    border: 1px solid #d97706;
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .is-hidden {
+    display: none;
+  }
+</style>
+<script>
+  window.__INITIAL_VOICE_USERS__ = <%- JSON.stringify(users || []) %>;
+</script>
 <script src="/static/js/voice.js"></script>
+

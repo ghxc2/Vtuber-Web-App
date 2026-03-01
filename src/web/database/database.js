@@ -15,8 +15,20 @@ db.exec(`
         access_token TEXT NOT NULL,
         refresh_token TEXT NOT NULL,
         expires_at INTEGER NOT NULL,
-        username TEXT
+        username TEXT,
+        display_key TEXT
 );`)
+
+// Migration: add display_key column for existing databases that predate it.
+const oauthTokenCols = db.prepare(`PRAGMA table_info(oauth_tokens)`).all().map((c) => c.name)
+if (!oauthTokenCols.includes('display_key')) {
+    db.exec(`ALTER TABLE oauth_tokens ADD COLUMN display_key TEXT`)
+}
+db.exec(`
+    UPDATE oauth_tokens
+    SET display_key = lower(hex(randomblob(16)))
+    WHERE display_key IS NULL OR display_key = ''
+`)
 
 // Create Initial User Configs Table
 db.exec(`
