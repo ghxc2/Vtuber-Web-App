@@ -11,7 +11,7 @@
 </h2>
 
 <% const itemByType = assetsByType || {}; %>
-<% const types = ['avatar', 'speaking', 'muted', 'deafened']; %>
+<% const types = ['speaking', 'avatar', 'muted', 'deafened']; %>
 
 <h2>Edit Files</h2>
 
@@ -34,9 +34,9 @@
               <img
                 src="<%= `/uploads/${ownerUserId}/${assetId}/${item.fileName}` %>"
                 alt="<%= `${assetId}-${type}` %>"
-                width="80"
-                height="80"
-                class="avatar-thumb avatar-thumb-80"
+                width="128"
+                height="128"
+                class="avatar-thumb avatar-thumb-128 avatar-thumb-contain"
               />
             <% } else { %>
               -

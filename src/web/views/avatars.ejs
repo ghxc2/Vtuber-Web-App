@@ -2,7 +2,7 @@
 <%- include('partials/nav') %>
 
 <div id="avatarsPage" data-owner-user-id="<%= ownerUserId %>">
-<h1>Hello, <%= username %>, Welcome to /avatars</h1>
+<h1>Avatar Sets</h1>
 <h2>Create Avatar Set</h2>
 
 <form
@@ -26,18 +26,19 @@
   <table>
     <thead>
       <tr>
-        <th>Set</th>
-        <th>Avatar</th>
+        <th>Asset ID</th>
         <th>Speaking</th>
+        <th>Avatar</th>
         <th>Muted</th>
         <th>Deafened</th>
-        <th></th>
+        <th>Edit</th>
+        <th>Delete</th>
       </tr>
     </thead>
     <tbody>
       <% avatars.forEach((asset) => { %>
         <% const itemByType = Object.fromEntries((asset.items || []).map((item) => [item.assetType, item])); %>
-        <% const types = ['avatar', 'speaking', 'muted', 'deafened']; %>
+        <% const types = ['speaking', 'avatar', 'muted', 'deafened']; %>
         <tr>
           <td><%= asset.assetId %></td>
           <% types.forEach((type) => { %>
@@ -47,9 +48,9 @@
                 <img
                   src="<%= `/uploads/${ownerUserId}/${asset.assetId}/${item.fileName}` %>"
                   alt="<%= `${asset.assetId}-${type}` %>"
-                  width="64"
-                  height="64"
-                  class="avatar-thumb avatar-thumb-64"
+                  width="128"
+                  height="128"
+                  class="avatar-thumb avatar-thumb-128 avatar-thumb-contain"
                 />
               <% } else { %>
                 -
@@ -60,6 +61,8 @@
             <form method="get" action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/edit" class="inline-form">
               <button type="submit">Edit</button>
             </form>
+          </td>
+          <td>
             <form
               method="post"
               action="/avatars/<%= ownerUserId %>/<%= asset.assetId %>/delete"

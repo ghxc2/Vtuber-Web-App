@@ -1,19 +1,24 @@
 <link rel="stylesheet" href="/static/css/app.css">
 <%- include('partials/nav') %>
 
-<h1>Hello, <%= username %>, Welcome to /voice</h1>
-<p>
-  <a href="/settings">Voice Settings</a>
-</p>
+<h1>Voice Channel Status</h1>
+
+<%
+  const statusUserInVoice = !!(voiceStatus && voiceStatus.userInVoice);
+  const statusInSameChannel = !!(voiceStatus && voiceStatus.inSameChannel);
+  const warningVisible = statusUserInVoice;
+  const warningConnected = statusUserInVoice && statusInSameChannel;
+  const warningText = warningConnected
+    ? 'Connected'
+    : 'Warning: the bot is not currently in your voice channel.';
+%>
 <p
   id="voiceWarning"
-  class="voice-warning <%= (voiceStatus && voiceStatus.userInVoice && !voiceStatus.inSameChannel) ? '' : 'is-hidden' %>"
+  class="voice-warning <%= warningConnected ? 'voice-warning-connected' : '' %> <%= warningVisible ? '' : 'is-hidden' %>"
 >
-  Warning: the bot is not currently in your voice channel.
+  <%= warningText %>
 </p>
-
 <h2>Voice Activity</h2>
-<div id="voiceStatus">Waiting for events...</div>
 
 <table id="voiceTable">
     <thead>
@@ -63,4 +68,3 @@
 
 </table>
 <script src="/static/js/voice.js"></script>
-

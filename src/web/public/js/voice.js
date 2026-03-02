@@ -1,6 +1,5 @@
 // Temporary Slop for Testing
 
-const voiceStatus = document.getElementById('voiceStatus');
 const voiceTableBody = document.getElementById('voiceTableBody');
 const voiceWarning = document.getElementById('voiceWarning');
 const initialUsersEncoded = voiceTableBody?.dataset?.initialUsers || '';
@@ -96,7 +95,10 @@ if (Array.isArray(initialUsers)) {
 const stream = new EventSource('/voice/events');
 
 stream.onopen = () => {
-  voiceStatus.textContent = 'Connected';
+  if (!voiceWarning) return;
+  voiceWarning.textContent = 'Connected';
+  voiceWarning.classList.remove('is-hidden');
+  voiceWarning.classList.add('voice-warning-connected');
 };
 
 stream.onmessage = (msg) => {
@@ -118,13 +120,30 @@ stream.onmessage = (msg) => {
 };
 
 stream.onerror = () => {
-  voiceStatus.textContent = 'Disconnected';
+  if (!voiceWarning) return;
+  voiceWarning.textContent = 'Disconnected';
+  voiceWarning.classList.remove('is-hidden');
+  voiceWarning.classList.remove('voice-warning-connected');
 };
 
 function updateVoiceWarning(status) {
   if (!voiceWarning) return;
-  const showWarning = !!status?.userInVoice && !status?.inSameChannel;
-  voiceWarning.classList.toggle('is-hidden', !showWarning);
+  const userInVoice = !!status?.userInVoice;
+  const inSameChannel = !!status?.inSameChannel;
+  if (!userInVoice) {
+    voiceWarning.classList.add('is-hidden');
+    voiceWarning.classList.remove('voice-warning-connected');
+    return;
+  }
+  if (inSameChannel) {
+    voiceWarning.textContent = 'Connected';
+    voiceWarning.classList.remove('is-hidden');
+    voiceWarning.classList.add('voice-warning-connected');
+    return;
+  }
+  voiceWarning.textContent = 'Warning: the bot is not currently in your voice channel.';
+  voiceWarning.classList.remove('is-hidden');
+  voiceWarning.classList.remove('voice-warning-connected');
 }
 
 async function refreshVoiceWarning() {

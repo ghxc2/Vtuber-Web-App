@@ -24,37 +24,49 @@ function renderPeopleInCall(users) {
     return;
   }
 
-  const html = users
+  const rows = users
     .map((u) => {
       const types = ['speaking', 'avatar', 'muted', 'deafened'];
       const leadAvatarSrc = u.discordAvatarUrl || '';
       const leadAvatarHtml = leadAvatarSrc
         ? `<img src="${leadAvatarSrc}" alt="${escapeHtml(`${u.username || u.userId}-avatar`)}" width="64" height="64" class="avatar-thumb avatar-thumb-64 avatar-thumb-contain mr-6" />`
         : '';
-      const avatarSetHtml = types
+      const avatarCellsHtml = types
         .map((type) => {
           const src = (u.avatarSet && u.avatarSet[type]) || (type === 'avatar' ? u.avatarUrl : '');
-          if (!src) return '<span class="ml-6">-</span>';
+          if (!src) return '<td>-</td>';
           const alt = escapeHtml(`${u.username || u.userId}-${type}`);
-          return `<img src="${src}" alt="${alt}" width="128" height="128" class="avatar-thumb avatar-thumb-128 avatar-thumb-contain ml-6" />`;
+          return `<td><img src="${src}" alt="${alt}" width="128" height="128" class="avatar-thumb avatar-thumb-128 avatar-thumb-contain" /></td>`;
         })
         .join('');
 
       const userLabel = escapeHtml(u.username || u.userId);
       const editUrl = `/settings/${encodeURIComponent(u.userId)}/edit`;
       return `
-        <h3>
-          ${leadAvatarHtml}
-          ${userLabel}
-          ${avatarSetHtml}
-          <a class="ml-8" href="${editUrl}">Edit Settings</a>
-        </h3>
-        <hr />
+        <tr>
+          <td>${leadAvatarHtml}${userLabel}</td>
+          ${avatarCellsHtml}
+          <td><a href="${editUrl}">Edit Settings</a></td>
+        </tr>
       `;
     })
     .join('');
 
-  peopleInCallEl.innerHTML = html;
+  peopleInCallEl.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Target User</th>
+          <th>Speaking</th>
+          <th>Avatar</th>
+          <th>Muted</th>
+          <th>Deafened</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
 }
 
 const settingsEventSource = new EventSource('/settings/events');

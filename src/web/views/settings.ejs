@@ -18,26 +18,45 @@
   <h2>People In Call</h2>
   <div id="people-in-call">
     <% if (peopleInCall && peopleInCall.length) { %>
-      <% peopleInCall.forEach((u) => { %>
-        <% const setTypes = ['avatar', 'speaking', 'muted', 'deafened']; %>
-        <% const leadAvatarSrc = u.discordAvatarUrl || null; %>
-        <h3>
-          <% if (leadAvatarSrc) { %>
-            <img src="<%= leadAvatarSrc %>" alt="<%= `${u.username || u.userId}-avatar` %>" width="64" height="64" class="avatar-thumb avatar-thumb-64 avatar-thumb-contain mr-6" />
-          <% } %>
-          <%= u.username || u.userId %>
-          <% setTypes.forEach((type) => { %>
-            <% const src = (u.avatarSet && u.avatarSet[type]) || (type === 'avatar' ? u.avatarUrl : null); %>
-            <% if (src) { %>
-              <img src="<%= src %>" alt="<%= `${(u.username || u.userId)}-${type}` %>" width="128" height="128" class="avatar-thumb avatar-thumb-128 avatar-thumb-contain ml-6" />
-            <% } else { %>
-              <span class="ml-6">-</span>
-            <% } %>
+      <table>
+        <thead>
+          <tr>
+            <th>Target User</th>
+            <th>Speaking</th>
+            <th>Avatar</th>
+            <th>Muted</th>
+            <th>Deafened</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% peopleInCall.forEach((u) => { %>
+            <% const setTypes = ['speaking', 'avatar', 'muted', 'deafened']; %>
+            <% const leadAvatarSrc = u.discordAvatarUrl || null; %>
+            <tr>
+              <td>
+                <% if (leadAvatarSrc) { %>
+                  <img src="<%= leadAvatarSrc %>" alt="<%= `${u.username || u.userId}-avatar` %>" width="64" height="64" class="avatar-thumb avatar-thumb-64 avatar-thumb-contain mr-6" />
+                <% } %>
+                <%= u.username || u.userId %>
+              </td>
+              <% setTypes.forEach((type) => { %>
+                <% const src = (u.avatarSet && u.avatarSet[type]) || (type === 'avatar' ? u.avatarUrl : null); %>
+                <td>
+                  <% if (src) { %>
+                    <img src="<%= src %>" alt="<%= `${(u.username || u.userId)}-${type}` %>" width="128" height="128" class="avatar-thumb avatar-thumb-128 avatar-thumb-contain" />
+                  <% } else { %>
+                    -
+                  <% } %>
+                </td>
+              <% }) %>
+              <td>
+                <a href="/settings/<%= encodeURIComponent(u.userId) %>/edit">Edit Settings</a>
+              </td>
+            </tr>
           <% }) %>
-          <a class="ml-8" href="/settings/<%= encodeURIComponent(u.userId) %>/edit">Edit Settings</a>
-        </h3>
-        <hr />
-      <% }) %>
+        </tbody>
+      </table>
     <% } else { %>
       <p>No users currently tracked in voice.</p>
     <% } %>
@@ -49,7 +68,6 @@
       <thead>
         <tr>
           <th>Target User</th>
-          <th>Nickname</th>
           <th>Speaking</th>
           <th>Avatar</th>
           <th>Muted</th>
@@ -67,7 +85,6 @@
               <% } %>
               <%= (displayUser && displayUser.username) || c.target_user_id %>
             </td>
-            <td><%= c.nickname || '-' %></td>
             <% const setTypes = ['speaking', 'avatar', 'muted', 'deafened']; %>
             <% setTypes.forEach((type) => { %>
               <% const src = (displayUser && displayUser.selectedAvatarSet && displayUser.selectedAvatarSet[type]) || (type === 'avatar' ? (displayUser && (displayUser.selectedAvatarUrl || displayUser.avatarUrl)) : null); %>

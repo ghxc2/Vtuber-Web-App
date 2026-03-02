@@ -11,14 +11,14 @@
 
 <h3>Current Avatar</h3>
 <div class="settings-current-avatar-box">
-  <% const currentTypes = ['avatar', 'speaking', 'muted', 'deafened']; %>
+  <% const currentTypes = ['speaking', 'avatar', 'muted', 'deafened']; %>
   <% const hasCurrentAvatar = currentAvatar && currentTypes.some((type) => !!currentAvatar[type]); %>
   <% if (hasCurrentAvatar) { %>
     <table>
       <thead>
         <tr>
-          <th>Avatar</th>
           <th>Speaking</th>
+          <th>Avatar</th>
           <th>Muted</th>
           <th>Deafened</th>
         </tr>
@@ -53,8 +53,8 @@
   <thead>
     <tr>
       <th>Set</th>
-      <th>Avatar</th>
       <th>Speaking</th>
+      <th>Avatar</th>
       <th>Muted</th>
       <th>Deafened</th>
       <th>Action</th>
@@ -63,7 +63,7 @@
   <tbody>
     <tr>
       <td>Default</td>
-      <% const defaultTypes = ['avatar', 'speaking', 'muted', 'deafened']; %>
+      <% const defaultTypes = ['speaking', 'avatar', 'muted', 'deafened']; %>
       <% defaultTypes.forEach((type) => { %>
         <td>
           <% if (defaultAvatarSet && defaultAvatarSet[type]) { %>

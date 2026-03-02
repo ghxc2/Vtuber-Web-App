@@ -281,10 +281,6 @@ async function generateDefaultAvatarsForUser(avatarUrl) {
     const baseHeight = sourceMeta.height || 128
     const iconSize = Math.max(1, Math.min(96, Math.floor(Math.min(baseWidth, baseHeight) * 0.35)))
 
-    // base avatar and speaking
-    avatars.avatar = buffer
-    avatars.speaking = buffer
-
     // default
     const defaultAvatar = await renderPipelineToBuffer(
         sharp(buffer, { animated: isAnimatedGif })
@@ -292,6 +288,10 @@ async function generateDefaultAvatarsForUser(avatarUrl) {
         ,
         isAnimatedGif
     )
+
+    // base avatar and speaking
+    avatars.avatar = defaultAvatar
+    avatars.speaking = buffer
 
     avatars.default = defaultAvatar 
 

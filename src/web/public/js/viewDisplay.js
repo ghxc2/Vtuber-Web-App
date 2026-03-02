@@ -4,6 +4,15 @@ const initialUsersEncoded = root?.dataset?.initialUsers || '';
 const streamPathEncoded = root?.dataset?.voiceEventPath || '';
 const imageElsByUserId = new Map();
 
+if (root && root.id === 'viewDisplayRoot') {
+  root.style.position = 'fixed';
+  root.style.left = '0';
+  root.style.bottom = '0';
+  root.style.display = 'flex';
+  root.style.alignItems = 'flex-end';
+  root.style.flexWrap = 'nowrap';
+}
+
 function pickAvatarForState(avatarSet, state) {
   const safeSet = avatarSet || {};
   const isDeaf = !!state?.deaf;
